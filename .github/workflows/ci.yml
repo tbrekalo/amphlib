@@ -1,0 +1,36 @@
+name: CI
+run-name: ${{ github.actor }} ci
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image:
+          - gcc:14
+          - gcc:13
+          - gcc:12
+
+          - silkeh/clang:20
+          - silkeh/clang:19
+          - silkeh/clang:18
+
+
+    container:
+      image: ${{matrix.image}}
+      options: --user root
+
+    steps:
+      - name: install dependencies
+        run: apt update && apt install -y cmake doctest-dev ninja-build
+
+      - uses: actions/checkout@v4
+      - name: install doctest
+        run: apt update && apt install doctest
+
+      - name: build
+        run: make debug
+
+      - name: test
+        run: ./build-debug/bin/test
