@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.31)
+cmake_minimum_required(VERSION 3.25)
 project(
   amphlib
   VERSION 0.1
@@ -24,7 +24,7 @@ if(amphlib_asan)
 endif()
 
 if(amphlib_test)
-  find_package(doctest REQUIRED)
+  find_package(doctest QUIET)
   add_executable(test ./src/test.cc)
   target_link_libraries(test doctest::doctest amphlib)
 endif()
