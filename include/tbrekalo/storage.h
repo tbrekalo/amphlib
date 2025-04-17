@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "tbrekalo/book.h"
 
 namespace tbrekalo {
