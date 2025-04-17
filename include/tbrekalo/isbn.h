@@ -9,6 +9,7 @@ namespace tbrekalo {
 class ISBN {
   static constexpr int BUFFER_SIZE = 14;
   static constexpr char SENTINEL = '\0';
+  friend struct std::hash<ISBN>;
 
   char buffer_[BUFFER_SIZE];
 
@@ -46,3 +47,19 @@ inline constexpr auto make_isbn(std::string_view src) noexcept
 }
 
 }  // namespace tbrekalo
+
+namespace std {
+
+template <>
+struct hash<tbrekalo::ISBN> {
+  constexpr auto operator()(tbrekalo::ISBN isbn) const noexcept -> std::size_t {
+    std::size_t hash = 5381;
+    for (int i = 0; i < tbrekalo::ISBN::BUFFER_SIZE; ++i) {
+      hash = ((hash << 5) + hash) + isbn.buffer_[i];
+    }
+
+    return hash;
+  }
+};
+
+}  // namespace std

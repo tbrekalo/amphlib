@@ -1,6 +1,8 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <unordered_set>
+
 #include "doctest/doctest.h"
-#include "tbrekalo/lib.h"
+#include "tbrekalo/isbn.h"
 
 namespace tb = tbrekalo;
 using namespace std::literals;
@@ -18,4 +20,14 @@ TEST_CASE("ISBN") {
 
   constexpr auto valid = "9781466835191";
   REQUIRE_EQ(std::string_view(*tb::make_isbn(valid)), valid);
+
+  SUBCASE("hash") {
+    REQUIRE_EQ(
+        std::unordered_set<tb::ISBN>{
+            *tb::make_isbn(valid),
+            *tb::make_isbn(valid),
+        }
+            .size(),
+        1uz);
+  }
 }
