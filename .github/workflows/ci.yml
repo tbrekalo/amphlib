@@ -23,7 +23,13 @@ jobs:
 
     steps:
       - name: install dependencies
-        run: apt update && apt install -y cmake doctest-dev ninja-build
+        run: |
+          apt update && \
+          apt install -y \
+            cmake \
+            doctest-dev \
+            libsqlite3-dev \
+            ninja-build \
 
       - uses: actions/checkout@v4
       - name: install doctest
