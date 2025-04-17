@@ -21,6 +21,11 @@ add_library(amphlib src/book.cc src/isbn.cc src/lib.cc src/library.cc
 target_include_directories(amphlib PUBLIC include)
 target_link_libraries(amphlib PRIVATE SQLite::SQLite3)
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  target_compile_options(amphlib PUBLIC "-stdlib=libc++")
+  target_link_options(amphlib PUBLIC "-stdlib=libc++")
+endif()
+
 if(amphlib_asan)
   target_compile_options(
     amphlib PUBLIC $<$<CONFIG:Debug,RelWithDebInfo>:-fsanitize=address
