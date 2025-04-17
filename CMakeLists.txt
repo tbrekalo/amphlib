@@ -8,6 +8,9 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
+set(CMAKE_C_STANDARD 23)
+set(CMAKE_CXX_STANDARD 23)
+
 option(amphlib_test "Build tests for amphlib" ${PROJECT_IS_TOP_LEVEL})
 option(aphtlib_asan "Build amphlib with address sanitizer"
        ${PROJECT_IS_TOP_LEVEL})
