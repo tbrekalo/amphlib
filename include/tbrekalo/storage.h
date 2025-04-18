@@ -7,38 +7,46 @@
 namespace tbrekalo {
 
 class Storage {
- public:
-  virtual ~Storage();
+ protected:
+  struct Impl {
+    virtual ~Impl();
 
-  virtual auto insert(Book const&) -> std::size_t = 0;
-  virtual auto remove(ISBN) -> std::size_t = 0;
+    virtual auto upsert(Book const&) -> std::size_t = 0;
+    virtual auto remove(ISBN) -> std::size_t = 0;
 
-  virtual auto isbns() -> std::vector<ISBN> = 0;
-  virtual auto count(ISBN) -> std::size_t = 0;
-  virtual auto n_unique() -> std::size_t = 0;
-};
+    virtual auto isbns() const -> std::vector<ISBN> = 0;
+    virtual auto count(ISBN) const -> std::size_t = 0;
+    virtual auto n_unique() const -> std::size_t = 0;
+  };
 
-class InMemoryStorage : public Storage {
-  struct Impl;
   std::unique_ptr<Impl> pimpl_;
+  Storage(std::unique_ptr<Impl> pimpl) : pimpl_(std::move(pimpl)) {}
 
  public:
-  InMemoryStorage();
+  Storage() = delete;
 
-  InMemoryStorage(InMemoryStorage const&) = delete;
-  auto operator=(InMemoryStorage const&) -> InMemoryStorage& = delete;
+  Storage(Storage const&) = delete;
+  auto operator=(Storage const&) -> Storage& = delete;
 
-  InMemoryStorage(InMemoryStorage&&) noexcept;
-  auto operator=(InMemoryStorage&&) noexcept -> InMemoryStorage&;
+  Storage(Storage&&) noexcept = delete;
+  auto operator=(Storage&&) noexcept -> Storage& = delete;
 
-  ~InMemoryStorage();
+  auto upsert(Book const& book) -> std::size_t { return pimpl_->upsert(book); }
+  auto remove(ISBN isbn) -> std::size_t { return pimpl_->remove(isbn); }
 
-  auto insert(Book const&) -> std::size_t override;
-  auto remove(ISBN) -> std::size_t override;
-
-  auto isbns() -> std::vector<ISBN> override;
-  auto count(ISBN) -> std::size_t override;
-  auto n_unique() -> std::size_t override;
+  auto isbns() const -> std::vector<ISBN> { return pimpl_->isbns(); }
+  auto count(ISBN isbn) const -> std::size_t { return pimpl_->count(isbn); };
+  auto n_unique() const -> std::size_t { return pimpl_->n_unique(); };
 };
+
+class MemoryStorage : public Storage {
+  class Impl;
+  MemoryStorage();
+
+ public:
+  friend auto make_memory_storage() -> MemoryStorage;
+};
+
+auto make_memory_storage() -> MemoryStorage;
 
 }  // namespace tbrekalo

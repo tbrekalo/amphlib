@@ -2,70 +2,58 @@
 
 #include <ranges>
 #include <unordered_map>
-#include <utility>
 #include <vector>
-
-#include "tbrekalo/book.h"
 
 namespace tbrekalo {
 
-Storage::~Storage() {}
+Storage::Impl::~Impl() {}
 
-struct InMemoryStorage::Impl {
-  std::unordered_map<ISBN, Book> books;
-  std::unordered_map<ISBN, std::size_t> counts;
-};
+class MemoryStorage::Impl final : public Storage::Impl {
+  std::unordered_map<ISBN, Book> books_;
+  std::unordered_map<ISBN, std::size_t> counts_;
 
-InMemoryStorage::InMemoryStorage()
-    : pimpl_(std::make_unique<InMemoryStorage::Impl>()) {}
+ public:
+  ~Impl() {}
 
-InMemoryStorage::InMemoryStorage(InMemoryStorage&& that) noexcept
-    : pimpl_(std::exchange(that.pimpl_,
-                           std::make_unique<InMemoryStorage::Impl>())) {}
-
-auto InMemoryStorage::operator=(InMemoryStorage&& that) noexcept
-    -> InMemoryStorage& {
-  pimpl_ =
-      std::exchange(that.pimpl_, std::make_unique<InMemoryStorage::Impl>());
-  return *this;
-}
-
-InMemoryStorage::~InMemoryStorage() {}
-
-auto InMemoryStorage::insert(Book const& book) -> std::size_t {
-  pimpl_->books[book.isbn] = book;
-  return ++pimpl_->counts[book.isbn];
-}
-
-auto InMemoryStorage::remove(ISBN isbn) -> std::size_t {
-  auto it = pimpl_->counts.find(isbn);
-  if (--it->second == 0) {
-    pimpl_->counts.erase(it);
-    pimpl_->books.erase(isbn);
-
-    return 0;
+  auto upsert(Book const& book) -> std::size_t override {
+    books_[book.isbn] = book;
+    return ++counts_[book.isbn];
   }
 
-  return it->second;
-}
+  auto remove(ISBN isbn) -> std::size_t override {
+    auto it = counts_.find(isbn);
+    if (it == counts_.end()) {
+      return 0;
+    }
 
-auto InMemoryStorage::isbns() -> std::vector<ISBN> {
-  std::vector<ISBN> dst(pimpl_->books.size());
-  std::ranges::copy(
-      std::views::transform(
-          pimpl_->books,
-          [](std::pair<ISBN, Book> const& pair) -> ISBN { return pair.first; }),
-      dst.begin());
+    if (it->second == 1) {
+      books_.erase(isbn);
+      counts_.erase(it);
+      return 0;
+    }
 
-  return dst;
-}
+    return --it->second;
+  }
 
-auto InMemoryStorage::count(ISBN isbn) -> std::size_t {
-  return pimpl_->counts[isbn];
-}
+  auto isbns() const -> std::vector<ISBN> override {
+    std::vector<ISBN> dst(books_.size());
+    std::ranges::copy(
+        std::views::transform(books_,
+                              [](std::pair<ISBN, Book> const& pair) -> ISBN {
+                                return pair.first;
+                              }),
+        dst.begin());
+    return dst;
+  }
 
-auto InMemoryStorage::n_unique() -> std::size_t {
-  return pimpl_->books.size();
+  auto count(ISBN isbn) const -> std::size_t override {
+    return counts_.at(isbn);
+  }
+
+  auto n_unique() const -> std::size_t override { return books_.size(); }
 };
+
+MemoryStorage::MemoryStorage() : Storage(std::make_unique<Impl>()) {}
+auto make_memory_storage() -> MemoryStorage { return MemoryStorage(); }
 
 }  // namespace tbrekalo

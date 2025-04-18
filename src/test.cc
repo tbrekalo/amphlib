@@ -35,7 +35,7 @@ TEST_CASE("ISBN") {
 }
 
 TEST_CASE("Storage") {
-  auto storage = tbrekalo::InMemoryStorage();
+  auto storage = tb::make_memory_storage();
   tb::Book prodigy{
       .isbn = *tb::make_isbn("9780720611748"),
       .name = {"The Prodigy"},
@@ -47,13 +47,13 @@ TEST_CASE("Storage") {
       .authors = {"Kermann Hesse"},
   };
 
-  CHECK(storage.insert(prodigy) == 1);
+  CHECK(storage.upsert(prodigy) == 1);
   REQUIRE(storage.n_unique() == 1);
 
-  CHECK(storage.insert(prodigy) == 2);
+  CHECK(storage.upsert(prodigy) == 2);
   REQUIRE(storage.n_unique() == 1);
 
-  CHECK(storage.insert(east) == 1);
+  CHECK(storage.upsert(east) == 1);
   REQUIRE(storage.n_unique() == 2);
 
   CHECK(storage.remove(prodigy.isbn) == 1);
