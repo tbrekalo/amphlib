@@ -17,7 +17,7 @@ option(aphtlib_asan "Build amphlib with address sanitizer"
 
 find_package(SQLite3 REQUIRED)
 add_library(amphlib src/book.cc src/isbn.cc src/lib.cc src/library.cc
-                    src/storage.cc)
+                    src/uuid.cc)
 target_include_directories(amphlib PUBLIC include)
 target_link_libraries(amphlib PRIVATE SQLite::SQLite3)
 
