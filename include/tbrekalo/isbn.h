@@ -7,18 +7,18 @@
 namespace tbrekalo {
 
 class ISBN {
-  static constexpr int BUFFER_SIZE = 14;
-  static constexpr char SENTINEL = '\0';
+  static inline constexpr int BUFFER_SIZE = 14;
+  static inline constexpr char SENTINEL = '\0';
   friend struct std::hash<ISBN>;
 
-  char buffer_[BUFFER_SIZE];
+  unsigned char buffer_[BUFFER_SIZE];
 
  public:
   enum class Error : char { INVALID_LENGTH, INVALID_CHAR };
 
   friend constexpr auto make_isbn(std::string_view) noexcept
       -> std::expected<ISBN, Error>;
-  friend constexpr auto operator<=>(ISBN const&, ISBN const&) noexcept
+  friend inline constexpr auto operator<=>(ISBN const&, ISBN const&) noexcept
       -> std::strong_ordering = default;
 
   explicit operator std::string_view() const noexcept {
