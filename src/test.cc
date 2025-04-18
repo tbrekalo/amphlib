@@ -1,10 +1,12 @@
-#include "tbrekalo/book.h"
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <uuid/uuid.h>
+
+#include <ranges>
 #include <unordered_set>
 
 #include "doctest/doctest.h"
 #include "tbrekalo/isbn.h"
-#include "tbrekalo/storage.h"
+#include "tbrekalo/uuid.h"
 
 namespace tb = tbrekalo;
 using namespace std::literals;
@@ -34,34 +36,17 @@ TEST_CASE("ISBN") {
   }
 }
 
-TEST_CASE("Storage") {
-  auto storage = tb::make_memory_storage();
-  tb::Book prodigy{
-      .isbn = *tb::make_isbn("9780720611748"),
-      .name = {"The Prodigy"},
-      .authors = {"Hermann Hesse"},
-  };
-  tb::Book east{
-      .isbn = *tb::make_isbn("9781466835092"sv),
-      .name = {"The Journey to the East"},
-      .authors = {"Kermann Hesse"},
-  };
+TEST_CASE("UUID") {
+  uuid_t source;
+  uuid_generate(source);
 
-  CHECK(storage.upsert(prodigy) == 1);
-  REQUIRE(storage.n_unique() == 1);
+  uuid_string_t truth;
+  uuid_unparse(source, truth);
 
-  CHECK(storage.upsert(prodigy) == 2);
-  REQUIRE(storage.n_unique() == 1);
+  uuid_string_t target;
+  tb::UUID(tb::UUID::SourceSpan(source)).serialize(target);
 
-  CHECK(storage.upsert(east) == 1);
-  REQUIRE(storage.n_unique() == 2);
-
-  CHECK(storage.remove(prodigy.isbn) == 1);
-  REQUIRE(storage.n_unique() == 2);
-
-  CHECK(storage.remove(east.isbn) == 0);
-  REQUIRE(storage.n_unique() == 1);
-
-  CHECK(storage.remove(prodigy.isbn) == 0);
-  REQUIRE(storage.n_unique() == 0);
+  for (auto [lhs, rhs] : std::views::zip(truth, target)) {
+    CHECK_EQ(lhs, rhs);
+  }
 }
