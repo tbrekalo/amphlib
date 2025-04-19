@@ -1,6 +1,8 @@
 #pragma once
 
+#include <expected>
 #include <memory>
+#include <vector>
 
 #include "tbrekalo/book.h"
 #include "tbrekalo/uuid.h"
@@ -8,34 +10,37 @@
 namespace tbrekalo {
 
 class Library {
-  struct Impl;
-  std::unique_ptr<Impl> pimpl_;
+  class Impl;
+  mutable std::shared_ptr<Impl> pimpl_;
 
-  Library(std::string_view path);
-  friend auto std::make_unique<Impl>() -> std::unique_ptr<Impl>;
-  friend auto make_library(std::string_view path) -> std::unique_ptr<Library>;
+  explicit Library(std::shared_ptr<Impl>);
 
  public:
-  struct LikeResult {
+  enum class Error : char { INTERNAL, INVALID_ARGUMENT };
+
+  struct Record {
     UUID uuid;
-    Book book;
+    ISBN isbn;
+    std::string name;
+    std::string author;
+    bool available;
   };
 
-  Library(Library const&) = delete;
-  auto operator=(Library const&) -> Library& = delete;
+  auto insert(Book const&) -> std::expected<UUID, Error>;
+  auto erase(UUID) -> std::expected<void, Error>;
 
-  Library(Library&&) noexcept = delete;
-  auto operator=(Library&&) noexcept -> Library& = delete;
+  auto size() const -> std::expected<std::size_t, Error>;
+  auto distinct() const -> std::expected<std::size_t, Error>;
 
-  ~Library();
+  auto name_like(std::string_view) -> std::expected<std::vector<Record>, Error>;
+  auto author_like(std::string_view)
+      -> std::expected<std::vector<Record>, Error>;
 
-  auto insert(Book const&) -> UUID;
-  auto erase(UUID) -> void;
-
-  auto author_like(std::string_view) -> std::vector<LikeResult>;
-  auto title_like(std::string_view) -> std::vector<LikeResult>;
+  friend auto make_library(std::string_view path)
+      -> std::expected<Library, Library::Error>;
 };
 
-auto make_library(std::string_view path) -> std::unique_ptr<Library>;
+auto make_library(std::string_view path)
+    -> std::expected<Library, Library::Error>;
 
 }  // namespace tbrekalo
