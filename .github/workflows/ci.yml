@@ -8,7 +8,6 @@ jobs:
     strategy:
       matrix:
         image:
-          - gcc:14
           - silkeh/clang:20
 
 
