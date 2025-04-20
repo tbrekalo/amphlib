@@ -1,5 +1,3 @@
-#include "tbrekalo/book.h"
-#include "tbrekalo/library.h"
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <uuid/uuid.h>
 
@@ -7,8 +5,7 @@
 #include <unordered_set>
 
 #include "doctest/doctest.h"
-#include "tbrekalo/isbn.h"
-#include "tbrekalo/uuid.h"
+#include "tbrekalo/library.h"
 
 namespace tb = tbrekalo;
 using namespace std::literals;
@@ -136,16 +133,38 @@ TEST_SUITE("Library") {
     assert_insertion(BOOK_SIDDHARTHA, 3, 2);
   }
 
-  TEST_CASE("LibraryAuthorLike") {
+  TEST_CASE("LibraryLike") {
     auto library = tb::make_library(":memory:");
     REQUIRE(library.has_value());
 
     auto hamlet_uuid = *library->insert(BOOK_HAMLET);
     auto siddhartha_uuid = *library->insert(BOOK_SIDDHARTHA);
 
-    SUBCASE("FirstName") {
-      auto result = library->author_like("William");
-      REQUIRE(result.has_value());
+    auto make_assert_single = [&library]<class Fn>(Fn&& fn)
+      requires(
+          std::is_invocable_r_v<std::expected<std::vector<tb::Library::Record>,
+                                              tb::Library::Error>,
+                                Fn, tb::Library*, std::string_view>)
+    {
+      return [&library, fn](std::string_view query, tb::UUID expected) {
+        auto result = std::invoke(fn, &*library, query);
+        REQUIRE(result.has_value());
+        REQUIRE(result->size() == 1);
+        CHECK(result->front().uuid == expected);
+      };
+    };
+
+    SUBCASE("Author") {
+      auto assert_single = make_assert_single(&tb::Library::author_like);
+      SUBCASE("FirstName") { assert_single("William", hamlet_uuid); }
+      SUBCASE("LaseName") { assert_single("Shakespeare", hamlet_uuid); }
+      SUBCASE("Middle") { assert_single("iam Shak", hamlet_uuid); }
+    }
+
+    SUBCASE("Name") {
+      auto assert_single = make_assert_single(&tb::Library::name_like);
+      SUBCASE("Hamlet") { assert_single("aml", hamlet_uuid); }
+      SUBCASE("Siddhartha") { assert_single("iddh", siddhartha_uuid); }
     }
   }
 }
