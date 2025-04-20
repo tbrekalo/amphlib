@@ -178,7 +178,7 @@ class Library::Impl {
                      /* errmsg = */ &errmsg)) {
       log(errmsg);
       sqlite3_free(errmsg);
-      return std::unexpected(Library::Error::INTERNAL);
+      return std::unexpected(Library::Error::UNEXPECTED);
     }
 
     return {};
@@ -192,7 +192,7 @@ auto make_library(std::string_view path)
   sqlite3* db;
   if (sqlite3_open(path.data(), &db)) {
     log(sqlite3_errmsg(db));
-    return std::unexpected(Library::Error::INTERNAL);
+    return std::unexpected(Library::Error::UNEXPECTED);
   }
 
   auto impl = std::make_shared<Library::Impl>(unique_sqlite3(db));

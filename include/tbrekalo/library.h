@@ -16,7 +16,7 @@ class Library {
   explicit Library(std::shared_ptr<Impl>);
 
  public:
-  enum class Error : char { INTERNAL, INVALID_ARGUMENT };
+  enum class Error : char { UNEXPECTED, DB_CONNECTION, INVALID_ARGUMENT };
 
   struct Record {
     UUID uuid;
