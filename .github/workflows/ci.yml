@@ -30,6 +30,7 @@ jobs:
             doctest-dev \
             libsqlite3-dev \
             ninja-build \
+            uuid \
             uuid-dev
 
       - uses: actions/checkout@v4

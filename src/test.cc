@@ -64,14 +64,16 @@ TEST_SUITE("UUID") {
   }
 
   TEST_CASE("UUIDSerialize") {
+    using uuid_str_t = char[37];
+
     uuid_t source;
     uuid_generate_random(source);
     tb::UUID const uuid{tb::UUID::SourceSpan(source)};
 
-    uuid_string_t source_str;
+    uuid_str_t source_str;
     uuid_unparse(source, source_str);
 
-    uuid_string_t target_str;
+    uuid_str_t target_str;
     uuid.serialize(target_str);
     for (auto [lhs, rhs] : std::views::zip(source_str, target_str)) {
       CHECK_EQ(lhs, rhs);
