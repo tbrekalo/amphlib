@@ -104,7 +104,7 @@ TEST_SUITE("UUID") {
 }
 
 TEST_SUITE("Library") {
-  TEST_CASE("CreateLibrary") {
+  TEST_CASE("LibraryCreate") {
     auto library = tb::make_library(":memory:");
     REQUIRE(library.has_value());
 
