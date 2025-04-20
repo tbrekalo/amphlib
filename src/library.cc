@@ -36,9 +36,9 @@ static constexpr auto INIT_DB_SQL = R"(
     available INTEGER DEFAULT 1
   );
   
-  CREATE INDEX IF NOT EXISTS idx_record_isbn ON record(isbn);
-  CREATE INDEX IF NOT EXISTS idx_record_name_available ON record(name, available);
-  CREATE INDEX IF NOT EXISTS idx_record_author_available ON record(author, available);
+  CREATE INDEX IF NOT EXISTS idx_record_name ON record(name);
+  CREATE INDEX IF NOT EXISTS idx_record_author ON record(author);
+  CREATE INDEX IF NOT EXISTS idx_record_uuid_available ON record(uuid, available);
 )";
 
 static constexpr auto INSERT_FMT =
