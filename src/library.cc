@@ -246,7 +246,7 @@ auto Library::name_like(std::string_view name_like)
   std::vector<Library::Record> dst;
   return pimpl_
       ->execute(Impl::ExecuteArgs{
-          .sql = sql::make_author_like_sql(name_like),
+          .sql = sql::make_name_like_sql(name_like),
           .callback = parse_record,
           .callback_arg = &dst,
       })
