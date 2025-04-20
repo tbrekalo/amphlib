@@ -1,3 +1,4 @@
+#include "tbrekalo/uuid.h"
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <uuid/uuid.h>
 
@@ -175,6 +176,20 @@ TEST_SUITE("Library") {
       auto assert_single = make_assert_single(&tb::Library::name_like);
       SUBCASE("Hamlet") { assert_single("aml", hamlet_uuid); }
       SUBCASE("Siddhartha") { assert_single("iddh", siddhartha_uuid); }
+    }
+
+    SUBCASE("Duplicate") {
+      auto omlet_uuid = *library->insert(BOOK_HAMLET);
+      auto result = library->author_like("William");
+      REQUIRE(result.has_value());
+      REQUIRE(result->size() == 2);
+
+      std::unordered_set<tb::UUID> uuids, expected{hamlet_uuid, omlet_uuid};
+      for (auto const& record : *result) {
+        uuids.insert(record.uuid);
+      }
+
+      REQUIRE_EQ(uuids, expected);
     }
   }
 }
