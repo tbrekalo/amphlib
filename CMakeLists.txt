@@ -15,11 +15,18 @@ option(amphlib_test "Build tests for amphlib" ${PROJECT_IS_TOP_LEVEL})
 option(aphtlib_asan "Build amphlib with address sanitizer"
        ${PROJECT_IS_TOP_LEVEL})
 
+include(FetchContent)
+FetchContent_Declare(
+  libuuid
+  GIT_REPOSITORY https://github.com/gershnik/libuuid-cmake
+  GIT_TAG v2.41)
+FetchContent_MakeAvailable(libuuid)
+
 find_package(SQLite3 REQUIRED)
 add_library(amphlib src/book.cc src/isbn.cc src/lib.cc src/library.cc
                     src/uuid.cc)
 target_include_directories(amphlib PUBLIC include)
-target_link_libraries(amphlib PRIVATE SQLite::SQLite3)
+target_link_libraries(amphlib PRIVATE SQLite::SQLite3 uuid::uuid)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   target_compile_options(amphlib PUBLIC "-stdlib=libc++")
@@ -37,5 +44,5 @@ endif()
 if(amphlib_test)
   find_package(doctest QUIET)
   add_executable(test ./src/test.cc)
-  target_link_libraries(test doctest::doctest amphlib)
+  target_link_libraries(test amphlib doctest::doctest uuid::uuid)
 endif()
