@@ -22,6 +22,7 @@ jobs:
           apt install -y \
             cmake \
             doctest-dev \
+            git \
             libsqlite3-dev \
             ninja-build \
 
