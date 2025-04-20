@@ -47,7 +47,7 @@ static constexpr auto INSERT_FMT =
 static auto make_insert_sql(Library::Record const& record) -> std::string {
   return std::format(INSERT_FMT, UUIDString(record.uuid).data(),
                      record.isbn.data(), record.name, record.author,
-                     record.available);
+                     static_cast<int>(record.available));
 }
 
 static constexpr auto ERASE_FMT = R"(DELETE FROM record WHERE uuid='{}')";
