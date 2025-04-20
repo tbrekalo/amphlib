@@ -18,13 +18,13 @@ auto UUID::serialize(std::span<char, UUID::TARGET_SIZE> target) const -> void {
 }
 
 UUIDString::UUIDString(std::string_view source) {
-  assert(source.size() == UUID::TARGET_SIZE);
+  assert(source.size() == STRING_LENGTH);
   std::memcpy(data_, source.data(), UUID::TARGET_SIZE);
 }
 
 auto make_uuid_string(std::string_view source) -> std::optional<UUIDString> {
   // TODO(tbrekalo): do better checks on UUID?
-  if (source.size() + 1 != UUIDString::SIZE) {
+  if (source.size() != UUIDString::STRING_LENGTH) {
     return std::nullopt;
   }
 

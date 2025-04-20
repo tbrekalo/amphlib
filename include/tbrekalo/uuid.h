@@ -14,7 +14,6 @@ class UUID {
   static inline constexpr int TARGET_SIZE = 37;
 
   friend class UUIDString;
-
   unsigned char data_[SIZE];
 
  public:
@@ -35,8 +34,9 @@ class UUID {
 };
 
 class UUIDString {
-  static inline constexpr int SIZE = UUID::TARGET_SIZE;
-  char data_[SIZE];
+  static inline constexpr int DATA_SIZE = 37;
+  static inline constexpr int STRING_LENGTH = 36;
+  char data_[37];
 
   explicit UUIDString(std::string_view src);
   friend auto make_uuid_string(std::string_view) -> std::optional<UUIDString>;
@@ -44,7 +44,7 @@ class UUIDString {
  public:
   explicit UUIDString(UUID uuid) noexcept { uuid.serialize(data_); }
 
-  auto size() const noexcept -> std::size_t { return UUID::TARGET_SIZE; }
+  auto size() const noexcept -> std::size_t { return STRING_LENGTH; }
   auto data(this auto&& self) -> decltype(auto) {
     return std::forward_like<decltype(self)>(self.data_);
   }
