@@ -9,12 +9,7 @@ jobs:
       matrix:
         image:
           - gcc:14
-          - gcc:13
-          - gcc:12
-
           - silkeh/clang:20
-          - silkeh/clang:19
-          - silkeh/clang:18
 
 
     container:
