@@ -189,4 +189,29 @@ TEST_SUITE("Library") {
       REQUIRE_EQ(uuids, expected);
     }
   }
+
+  TEST_CASE("LibraryBorrow") {
+    auto library = *tb::make_library(":memory:");
+    auto hamlet_uuid = *library.insert(BOOK_HAMLET);
+
+    {
+      auto result = library.acquire_book(hamlet_uuid);
+      REQUIRE(result.has_value());
+    }
+
+    {
+      auto result = library.acquire_book(hamlet_uuid);
+      REQUIRE(!result.has_value());
+    }
+
+    {
+      auto result = library.release_book(hamlet_uuid);
+      REQUIRE(result.has_value());
+    }
+
+    {
+      auto result = library.acquire_book(hamlet_uuid);
+      REQUIRE(result.has_value());
+    }
+  }
 }

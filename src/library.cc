@@ -75,6 +75,20 @@ static auto make_author_like_sql(std::string_view author_like) -> std::string {
   return std::format(AUTHOR_LIKE_FMT, author_like);
 }
 
+static constexpr auto ACQUIRE_RECORD_FMT =
+    R"(UPDATE record SET acquired=1 WHERE uuid='{}' AND acquired=0;)";
+
+static auto make_acquire_record_sql(UUIDString uuid) -> std::string {
+  return std::format(ACQUIRE_RECORD_FMT, static_cast<char const*>(uuid));
+}
+
+static constexpr auto RELEASE_RECORD_FMT =
+    R"(UPDATE record SET acquired=0 WHERE uuid='{}' AND acquired=1;)";
+
+static auto make_release_record_sql(UUIDString uuid) -> std::string {
+  return std::format(RELEASE_RECORD_FMT, static_cast<char const*>(uuid));
+}
+
 }  // namespace tbrekalo::sql
 
 namespace tbrekalo {
@@ -274,6 +288,33 @@ auto Library::author_like(std::string_view author_like)
       .transform([dst_ptr = &dst](int /* n affected rows */)
                      -> std::vector<Library::Record> {
         return {std::move(*dst_ptr)};
+      });
+}
+
+auto Library::acquire_book(UUID uuid) -> std::expected<void, Library::Error> {
+  return pimpl_
+      ->execute(Impl::ExecuteArgs{
+          .sql = sql::make_acquire_record_sql(UUIDString(uuid)),
+      })
+      .and_then([](int changes) -> std::expected<void, Library::Error> {
+        if (changes == 1) {
+          return {};
+        }
+
+        return std::unexpected(Library::Error::INVALID_ARGUMENT);
+      });
+}
+
+auto Library::release_book(UUID uuid) -> std::expected<void, Library::Error> {
+  return pimpl_
+      ->execute(Impl::ExecuteArgs{
+          .sql = sql::make_release_record_sql(UUIDString(uuid))})
+      .and_then([](int changes) -> std::expected<void, Library::Error> {
+        if (changes == 1) {
+          return {};
+        }
+
+        return std::unexpected(Library::Error::INVALID_ARGUMENT);
       });
 }
 

@@ -36,6 +36,9 @@ class Library {
   auto author_like(std::string_view)
       -> std::expected<std::vector<Record>, Error>;
 
+  auto acquire_book(UUID) -> std::expected<void, Error>;
+  auto release_book(UUID) -> std::expected<void, Error>;
+
   friend auto make_library(std::string_view path)
       -> std::expected<Library, Library::Error>;
 };
