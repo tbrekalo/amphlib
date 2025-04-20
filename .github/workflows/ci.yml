@@ -8,13 +8,7 @@ jobs:
     strategy:
       matrix:
         image:
-          - gcc:14
-          - gcc:13
-          - gcc:12
-
           - silkeh/clang:20
-          - silkeh/clang:19
-          - silkeh/clang:18
 
 
     container:
@@ -23,7 +17,14 @@ jobs:
 
     steps:
       - name: install dependencies
-        run: apt update && apt install -y cmake doctest-dev ninja-build
+        run: |
+          apt update && \
+          apt install -y \
+            cmake \
+            doctest-dev \
+            git \
+            libsqlite3-dev \
+            ninja-build \
 
       - uses: actions/checkout@v4
       - name: install doctest

@@ -1,7 +1,7 @@
 #pragma once
 
-namespace tbrekalo {
+#include <expected>
 
-auto foo() -> int;
+#include "tbrekalo/library.h"
 
-}  // namespace tbrekalo
+namespace tbrekalo {}  // namespace tbrekalo
