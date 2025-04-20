@@ -38,12 +38,8 @@ make build-debug
 ```cpp
 class Library {
   class Impl;
-  mutable std::unique_ptr<Impl> pimpl_;
 
-  explicit Library(std::unique_ptr<Impl>);
-
- public:
-  enum class Error : char { UNEXPECTED, DB_CONNECTION, INVALID_ARGUMENT };
+  enum class Error : char { DB_CONNECTION, INVALID_ARGUMENT, UNEXPECTED };
 
   struct Record {
     UUID uuid;
@@ -52,6 +48,18 @@ class Library {
     std::string author;
     bool acquired;
   };
+
+  mutable std::unique_ptr<Impl> pimpl_;
+  explicit Library(std::unique_ptr<Impl>);
+
+  auto fetch_records_generic(std::string_view sql) const
+      -> std::expected<std::vector<Record>, Error>;
+  auto acquisition_generic_sql(std::string_view sql) const
+      -> std::expected<void, Error>;
+
+ public:
+  using Error = Error;
+  using Record = Record;
 
   Library(Library const&) = delete;
   auto operator=(Library const&) -> Library& = delete;
@@ -64,10 +72,10 @@ class Library {
   auto insert(Book const&) -> std::expected<UUID, Error>;
   auto erase(UUID) -> std::expected<void, Error>;
 
-  auto records() const -> std::expected<std::vector<Record>, Error>;
-
   auto size() const -> std::expected<std::size_t, Error>;
   auto distinct() const -> std::expected<std::size_t, Error>;
+
+  auto records() const -> std::expected<std::vector<Record>, Error>;
 
   auto name_like(std::string_view) -> std::expected<std::vector<Record>, Error>;
   auto author_like(std::string_view)

@@ -185,11 +185,11 @@ class Library::Impl {
     void* callback_arg = nullptr;
   };
 
-  auto execute(ExecuteArgs args) -> std::expected<int, Library::Error> {
+  auto execute(ExecuteArgs args) -> std::expected<int, Error> {
     char* errmsg;
     std::lock_guard lk(db_mutex_);
     if (db_.get() == nullptr) {
-      return std::unexpected(Library::Error::DB_CONNECTION);
+      return std::unexpected(Error::DB_CONNECTION);
     }
 
     if (sqlite3_exec(db_.get(),
@@ -199,7 +199,7 @@ class Library::Impl {
                      /* errmsg = */ &errmsg)) {
       log(errmsg);
       sqlite3_free(errmsg);
-      return std::unexpected(Library::Error::UNEXPECTED);
+      return std::unexpected(Error::UNEXPECTED);
     }
 
     return sqlite3_changes(db_.get());
@@ -279,11 +279,12 @@ auto Library::distinct() const -> std::expected<std::size_t, Error> {
           [count](int /* n affected rows */) -> std::size_t { return count; });
 }
 
-auto Library::records() const -> std::expected<std::vector<Record>, Error> {
+auto Library::fetch_records_generic(std::string_view sql) const
+    -> std::expected<std::vector<Record>, Error> {
   std::vector<Record> records;
   return pimpl_
       ->execute(Impl::ExecuteArgs{
-          .sql = sql::RECORDS_SQL,
+          .sql = sql,
           .callback = parse_record,
           .callback_arg = &records,
       })
@@ -292,61 +293,40 @@ auto Library::records() const -> std::expected<std::vector<Record>, Error> {
       });
 }
 
+auto Library::records() const -> std::expected<std::vector<Record>, Error> {
+  return fetch_records_generic(sql::RECORDS_SQL);
+}
+
 auto Library::name_like(std::string_view name_like)
-    -> std::expected<std::vector<Library::Record>, Library::Error> {
-  std::vector<Library::Record> dst;
-  return pimpl_
-      ->execute(Impl::ExecuteArgs{
-          .sql = sql::make_name_like_sql(name_like),
-          .callback = parse_record,
-          .callback_arg = &dst,
-      })
-      .transform([dst_ptr = &dst](int /* n affected rows */)
-                     -> std::vector<Library::Record> {
-        return std::vector(std::move(*dst_ptr));
-      });
+    -> std::expected<std::vector<Record>, Error> {
+  return fetch_records_generic(sql::make_name_like_sql(name_like));
 }
 
 auto Library::author_like(std::string_view author_like)
-    -> std::expected<std::vector<Library::Record>, Library::Error> {
-  std::vector<Library::Record> dst;
-  return pimpl_
-      ->execute(Impl::ExecuteArgs{
-          .sql = sql::make_author_like_sql(author_like),
-          .callback = parse_record,
-          .callback_arg = &dst,
-      })
-      .transform([dst_ptr = &dst](int /* n affected rows */)
-                     -> std::vector<Library::Record> {
-        return {std::move(*dst_ptr)};
-      });
+    -> std::expected<std::vector<Record>, Error> {
+  return fetch_records_generic(sql::make_author_like_sql(author_like));
 }
 
-auto Library::acquire_book(UUID uuid) -> std::expected<void, Library::Error> {
-  return pimpl_
-      ->execute(Impl::ExecuteArgs{
-          .sql = sql::make_acquire_record_sql(UUIDString(uuid)),
-      })
-      .and_then([](int changes) -> std::expected<void, Library::Error> {
+auto Library::acquisition_generic_sql(std::string_view sql) const
+    -> std::expected<void, Error> {
+  return pimpl_->execute(Impl::ExecuteArgs{.sql = sql})
+      .and_then([](int changes) -> std::expected<void, Error> {
         if (changes == 1) {
           return {};
         }
 
-        return std::unexpected(Library::Error::INVALID_ARGUMENT);
+        return std::unexpected(Error::INVALID_ARGUMENT);
       });
 }
 
-auto Library::release_book(UUID uuid) -> std::expected<void, Library::Error> {
-  return pimpl_
-      ->execute(Impl::ExecuteArgs{
-          .sql = sql::make_release_record_sql(UUIDString(uuid))})
-      .and_then([](int changes) -> std::expected<void, Library::Error> {
-        if (changes == 1) {
-          return {};
-        }
+auto Library::acquire_book(UUID uuid) -> std::expected<void, Error> {
+  return acquisition_generic_sql(
+      sql::make_acquire_record_sql(UUIDString(uuid)));
+}
 
-        return std::unexpected(Library::Error::INVALID_ARGUMENT);
-      });
+auto Library::release_book(UUID uuid) -> std::expected<void, Error> {
+  return acquisition_generic_sql(
+      sql::make_release_record_sql(UUIDString(uuid)));
 }
 
 }  // namespace tbrekalo
