@@ -168,7 +168,7 @@ class Library::Impl {
     void* callback_arg = nullptr;
   };
 
-  auto execute(ExecuteArgs args) -> std::expected<void, Library::Error> {
+  auto execute(ExecuteArgs args) -> std::expected<int, Library::Error> {
     char* errmsg;
     std::lock_guard lk(db_mutex_);
     if (sqlite3_exec(db_.get(),
@@ -181,7 +181,7 @@ class Library::Impl {
       return std::unexpected(Library::Error::UNEXPECTED);
     }
 
-    return {};
+    return sqlite3_changes(db_.get());
   }
 };
 
@@ -197,7 +197,7 @@ auto make_library(std::string_view path)
 
   auto impl = std::make_shared<Library::Impl>(unique_sqlite3(db));
   return impl->execute(Library::Impl::ExecuteArgs{.sql = sql::INIT_DB_SQL})
-      .transform([impl] { return Library(impl); });
+      .transform([impl](int /* n affected rows */) { return Library(impl); });
 }
 
 auto Library::insert(Book const& book) -> std::expected<UUID, Error> {
@@ -210,13 +210,17 @@ auto Library::insert(Book const& book) -> std::expected<UUID, Error> {
       ->execute(Impl::ExecuteArgs{
           .sql = sql::make_insert_sql(rec),
       })
-      .transform([uuid = rec.uuid]() -> UUID { return uuid; });
+      .transform([uuid = rec.uuid](int /* n affected rows */) -> UUID {
+        return uuid;
+      });
 }
 
 auto Library::erase(UUID uuid) -> std::expected<void, Error> {
-  return pimpl_->execute(Impl::ExecuteArgs{
-      .sql = sql::make_erase_sql(uuid),
-  });
+  return pimpl_
+      ->execute(Impl::ExecuteArgs{
+          .sql = sql::make_erase_sql(uuid),
+      })
+      .transform([](int /* n affected rows */) {});
 }
 
 auto Library::size() const -> std::expected<std::size_t, Error> {
@@ -227,7 +231,8 @@ auto Library::size() const -> std::expected<std::size_t, Error> {
           .callback = parse_count,
           .callback_arg = &count,
       })
-      .transform([count] -> std::size_t { return count; });
+      .transform(
+          [count](int /* n affected rows */) -> std::size_t { return count; });
 }
 
 auto Library::distinct() const -> std::expected<std::size_t, Error> {
@@ -238,7 +243,8 @@ auto Library::distinct() const -> std::expected<std::size_t, Error> {
           .callback = parse_count,
           .callback_arg = &count,
       })
-      .transform([count] -> std::size_t { return count; });
+      .transform(
+          [count](int /* n affected rows */) -> std::size_t { return count; });
 }
 
 auto Library::name_like(std::string_view name_like)
@@ -250,7 +256,8 @@ auto Library::name_like(std::string_view name_like)
           .callback = parse_record,
           .callback_arg = &dst,
       })
-      .transform([dst_ptr = &dst] -> std::vector<Library::Record> {
+      .transform([dst_ptr = &dst](int /* n affected rows */)
+                     -> std::vector<Library::Record> {
         return {std::move(*dst_ptr)};
       });
 }
@@ -264,7 +271,8 @@ auto Library::author_like(std::string_view author_like)
           .callback = parse_record,
           .callback_arg = &dst,
       })
-      .transform([dst_ptr = &dst] -> std::vector<Library::Record> {
+      .transform([dst_ptr = &dst](int /* n affected rows */)
+                     -> std::vector<Library::Record> {
         return {std::move(*dst_ptr)};
       });
 }
