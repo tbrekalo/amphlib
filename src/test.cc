@@ -166,6 +166,23 @@ TEST_SUITE("Library") {
     assert_insertion(BOOK_SIDDHARTHA, 3, 2);
   }
 
+  TEST_CASE("LibraryErase") {
+    auto library = *tb::make_library(":memory:");
+    auto hamlet = *library.insert(BOOK_HAMLET);
+    auto omlet = *library.insert(BOOK_HAMLET);
+
+    REQUIRE_EQ(*library.size(), 2);
+    REQUIRE_EQ(*library.distinct(), 1);
+
+    {
+      auto result = library.erase(omlet);
+      REQUIRE(result.has_value());
+
+      CHECK_EQ(*library.size(), 1);
+      CHECK_EQ(*library.distinct(), 1);
+    }
+  }
+
   TEST_CASE("LibraryLike") {
     auto library = *tb::make_library(":memory:");
 
