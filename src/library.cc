@@ -12,8 +12,6 @@
 #include <source_location>
 #include <utility>
 
-#include "tbrekalo/uuid.h"
-
 namespace tbrekalo::meta {
 
 [[noreturn]] void iDoNotExist();

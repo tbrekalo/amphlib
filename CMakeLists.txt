@@ -23,8 +23,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(libuuid)
 
 find_package(SQLite3 REQUIRED)
-add_library(amphlib src/book.cc src/isbn.cc src/lib.cc src/library.cc
-                    src/uuid.cc)
+add_library(amphlib src/book.cc src/isbn.cc src/library.cc src/uuid.cc)
 target_include_directories(amphlib PUBLIC include)
 target_link_libraries(amphlib PRIVATE SQLite::SQLite3 uuid::uuid)
 
