@@ -77,6 +77,11 @@ TEST_SUITE("UUID") {
     }
   }
 
+  TEST_CASE("UUIDHash") {
+    tb::UUID a, b;
+    REQUIRE(std::unordered_set<tb::UUID>{a, a, b}.size() == 2);
+  }
+
   TEST_CASE("UUIDString") {
     static constexpr std::string_view UUID4(
         "d99d53e1-b67c-438b-8420-63766d8f50d0");
@@ -84,6 +89,11 @@ TEST_SUITE("UUID") {
 
     REQUIRE(uuid.has_value());
     CHECK_EQ(std::string_view(*uuid), UUID4);
+  }
+
+  TEST_CASE("UUIDStringHASH") {
+    tb::UUIDString a(tb::UUID{}), b(tb::UUID{});
+    REQUIRE(std::unordered_set<tb::UUIDString>{a, a, b}.size() == 2);
   }
 
   TEST_CASE("UUIDStringIllFormed") {
