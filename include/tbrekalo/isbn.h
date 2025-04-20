@@ -61,6 +61,7 @@ namespace std {
 
 template <>
 struct hash<tbrekalo::ISBN> {
+  // djb2
   constexpr auto operator()(tbrekalo::ISBN isbn) const noexcept -> std::size_t {
     std::size_t hash = 5381;
     for (int i = 0; i < tbrekalo::ISBN::BUFFER_SIZE; ++i) {
