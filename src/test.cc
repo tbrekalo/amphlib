@@ -1,4 +1,3 @@
-#include "tbrekalo/uuid.h"
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <uuid/uuid.h>
 
@@ -122,19 +121,18 @@ TEST_SUITE("Library") {
   }
 
   TEST_CASE("LibraryInsert") {
-    auto library = tb::make_library(":memory:");
-    REQUIRE(library.has_value());
+    auto library = *tb::make_library(":memory:");
 
     auto assert_insertion = [&](tb::Book const& book, std::size_t expected_size,
                                 std::size_t expected_distinct) {
-      auto result = library->insert(book);
+      auto result = library.insert(book);
       REQUIRE(result.has_value());
 
-      auto size = library->size();
+      auto size = library.size();
       REQUIRE(size.has_value());
       CHECK_EQ(*size, expected_size);
 
-      auto distinct = library->distinct();
+      auto distinct = library.distinct();
       REQUIRE(distinct.has_value());
       CHECK_EQ(*distinct, expected_distinct);
     };
@@ -145,11 +143,10 @@ TEST_SUITE("Library") {
   }
 
   TEST_CASE("LibraryLike") {
-    auto library = tb::make_library(":memory:");
-    REQUIRE(library.has_value());
+    auto library = *tb::make_library(":memory:");
 
-    auto hamlet_uuid = *library->insert(BOOK_HAMLET);
-    auto siddhartha_uuid = *library->insert(BOOK_SIDDHARTHA);
+    auto hamlet_uuid = *library.insert(BOOK_HAMLET);
+    auto siddhartha_uuid = *library.insert(BOOK_SIDDHARTHA);
 
     auto make_assert_single = [&library]<class Fn>(Fn&& fn)
       requires(
@@ -158,7 +155,7 @@ TEST_SUITE("Library") {
                                 Fn, tb::Library*, std::string_view>)
     {
       return [&library, fn](std::string_view query, tb::UUID expected) {
-        auto result = std::invoke(fn, &*library, query);
+        auto result = std::invoke(fn, &library, query);
         REQUIRE(result.has_value());
         REQUIRE(result->size() == 1);
         CHECK(result->front().uuid == expected);
@@ -179,8 +176,8 @@ TEST_SUITE("Library") {
     }
 
     SUBCASE("Duplicate") {
-      auto omlet_uuid = *library->insert(BOOK_HAMLET);
-      auto result = library->author_like("William");
+      auto omlet_uuid = *library.insert(BOOK_HAMLET);
+      auto result = library.author_like("William");
       REQUIRE(result.has_value());
       REQUIRE(result->size() == 2);
 
