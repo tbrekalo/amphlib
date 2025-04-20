@@ -1,3 +1,80 @@
 # Amphlib
 
 ![ci-status](https://github.com/tbrekalo/amphlib/actions/workflows/ci.yml/badge.svg)
+
+Amphlib is a demo project implementing book library managment system utilizing functiol features of modern c++. Usage examples can be found in `src/test.cc`. `misc/google-books.ipynb` is a jupyter notebook for fetching sample data from google books API.
+
+## Dependencies
+
+- linux distro or macOS (recommended)
+
+### C++
+
+- clang >= 20
+- cmake >= 3.25
+- doctest >= 2.4.11
+- git >= 2.39
+- gnu make >= 4.4.1 (optional)
+- libuuid >= 2.41
+- sqlite3 >= 3.49
+
+
+### Python
+- [uv](https://docs.astral.sh/uv/)
+
+
+### Building and running tests locally
+
+```bash
+uv sync
+source .venv/bin/activate
+
+make build-debug
+./build-debug/bin/
+```
+
+## Interface example
+
+```cpp
+class Library {
+  class Impl;
+  mutable std::unique_ptr<Impl> pimpl_;
+
+  explicit Library(std::unique_ptr<Impl>);
+
+ public:
+  enum class Error : char { UNEXPECTED, DB_CONNECTION, INVALID_ARGUMENT };
+
+  struct Record {
+    UUID uuid;
+    ISBN isbn;
+    std::string name;
+    std::string author;
+    bool acquired;
+  };
+
+  Library(Library const&) = delete;
+  auto operator=(Library const&) -> Library& = delete;
+
+  Library(Library&&) noexcept;
+  auto operator=(Library&&) noexcept -> Library&;
+
+  ~Library();
+
+  auto insert(Book const&) -> std::expected<UUID, Error>;
+  auto erase(UUID) -> std::expected<void, Error>;
+
+  auto size() const -> std::expected<std::size_t, Error>;
+  auto distinct() const -> std::expected<std::size_t, Error>;
+
+  auto name_like(std::string_view) -> std::expected<std::vector<Record>, Error>;
+  auto author_like(std::string_view)
+      -> std::expected<std::vector<Record>, Error>;
+
+  auto acquire_book(UUID) -> std::expected<void, Error>;
+  auto release_book(UUID) -> std::expected<void, Error>;
+
+  friend auto make_library(std::string_view path)
+      -> std::expected<Library, Library::Error>;
+};
+```
