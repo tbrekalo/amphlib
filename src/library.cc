@@ -62,6 +62,8 @@ static constexpr auto COUNT_SQL = R"(SELECT COUNT(*) FROM record;)";
 static constexpr auto DISTINCT_SQL =
     R"(SELECT COUNT(DISTINCT isbn) FROM record;)";
 
+static constexpr auto RECORDS_SQL = R"(SELECT * FROM record;)";
+
 static constexpr auto NAME_LIKE_FMT =
     R"(SELECT DISTINCT * FROM record WHERE name LIKE '%{}%';)";
 
@@ -277,6 +279,19 @@ auto Library::distinct() const -> std::expected<std::size_t, Error> {
           [count](int /* n affected rows */) -> std::size_t { return count; });
 }
 
+auto Library::records() const -> std::expected<std::vector<Record>, Error> {
+  std::vector<Record> records;
+  return pimpl_
+      ->execute(Impl::ExecuteArgs{
+          .sql = sql::RECORDS_SQL,
+          .callback = parse_record,
+          .callback_arg = &records,
+      })
+      .transform([records_ptr = &records](int) -> std::vector<Record> {
+        return std::vector(std::move(*records_ptr));
+      });
+}
+
 auto Library::name_like(std::string_view name_like)
     -> std::expected<std::vector<Library::Record>, Library::Error> {
   std::vector<Library::Record> dst;
@@ -288,7 +303,7 @@ auto Library::name_like(std::string_view name_like)
       })
       .transform([dst_ptr = &dst](int /* n affected rows */)
                      -> std::vector<Library::Record> {
-        return {std::move(*dst_ptr)};
+        return std::vector(std::move(*dst_ptr));
       });
 }
 

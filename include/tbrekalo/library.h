@@ -40,6 +40,8 @@ class Library {
   auto size() const -> std::expected<std::size_t, Error>;
   auto distinct() const -> std::expected<std::size_t, Error>;
 
+  auto records() const -> std::expected<std::vector<Record>, Error>;
+
   auto name_like(std::string_view) -> std::expected<std::vector<Record>, Error>;
   auto author_like(std::string_view)
       -> std::expected<std::vector<Record>, Error>;

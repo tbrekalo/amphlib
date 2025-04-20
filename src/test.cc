@@ -1,3 +1,4 @@
+#include "tbrekalo/uuid.h"
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <uuid/uuid.h>
 
@@ -180,6 +181,26 @@ TEST_SUITE("Library") {
 
       CHECK_EQ(*library.size(), 1);
       CHECK_EQ(*library.distinct(), 1);
+    }
+  }
+
+  TEST_CASE("LibraryRecords") {
+    auto library = *tb::make_library(":memory:");
+    auto hamlet = *library.insert(BOOK_HAMLET);
+    auto omlet = *library.insert(BOOK_HAMLET);
+    auto siddhartha = *library.insert(BOOK_SIDDHARTHA);
+
+    CHECK_EQ(*library.size(), 3);
+    {
+      auto result = library.records();
+      REQUIRE(result.has_value());
+
+      std::unordered_set<tb::UUID> uuids, expected{hamlet, omlet, siddhartha};
+      for (auto const& record : *result) {
+        uuids.insert(record.uuid);
+      }
+
+      REQUIRE_EQ(uuids, expected);
     }
   }
 

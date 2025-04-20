@@ -64,6 +64,8 @@ class Library {
   auto insert(Book const&) -> std::expected<UUID, Error>;
   auto erase(UUID) -> std::expected<void, Error>;
 
+  auto records() const -> std::expected<std::vector<Record>, Error>;
+
   auto size() const -> std::expected<std::size_t, Error>;
   auto distinct() const -> std::expected<std::size_t, Error>;
 
