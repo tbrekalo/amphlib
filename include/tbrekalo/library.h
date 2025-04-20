@@ -23,7 +23,7 @@ class Library {
     ISBN isbn;
     std::string name;
     std::string author;
-    bool available;
+    bool acquired;
   };
 
   auto insert(Book const&) -> std::expected<UUID, Error>;

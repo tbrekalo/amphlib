@@ -33,12 +33,12 @@ static constexpr auto INIT_DB_SQL = R"(
     isbn TEXT NOT NULL,
     name TEXT NOT NULL,
     author TEXT NOT NULL,
-    available INTEGER DEFAULT 1
+    acquired INTEGER DEFAULT 0
   );
   
   CREATE INDEX IF NOT EXISTS idx_record_name ON record(name);
   CREATE INDEX IF NOT EXISTS idx_record_author ON record(author);
-  CREATE INDEX IF NOT EXISTS idx_record_uuid_available ON record(uuid, available);
+  CREATE INDEX IF NOT EXISTS idx_record_uuid_acquired ON record(uuid, acquired);
 )";
 
 static constexpr auto INSERT_FMT =
@@ -47,7 +47,7 @@ static constexpr auto INSERT_FMT =
 static auto make_insert_sql(Library::Record const& record) -> std::string {
   return std::format(INSERT_FMT, UUIDString(record.uuid).data(),
                      record.isbn.data(), record.name, record.author,
-                     static_cast<int>(record.available));
+                     static_cast<int>(record.acquired));
 }
 
 static constexpr auto ERASE_FMT = R"(DELETE FROM record WHERE uuid='{}')";
@@ -125,9 +125,9 @@ static auto parse_record(void* records_vec_void_ptr, int n, char** values,
       continue;
     }
 
-    if (variable_sv == "available") {
+    if (variable_sv == "acquired") {
       if (int x; sscanf(value_sv.data(), "%d", &x)) {
-        record.available = x;
+        record.acquired = x;
         continue;
       }
       return 1;
@@ -205,7 +205,7 @@ auto Library::insert(Book const& book) -> std::expected<UUID, Error> {
              .isbn = book.isbn,
              .name = book.name,
              .author = book.author,
-             .available = true};
+             .acquired = false};
   return pimpl_
       ->execute(Impl::ExecuteArgs{
           .sql = sql::make_insert_sql(rec),
