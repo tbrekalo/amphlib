@@ -121,6 +121,29 @@ TEST_SUITE("Library") {
     }
   }
 
+  TEST_CASE("LibraryMove") {
+    auto library = *tb::make_library(":memory:");
+    auto moved_library(std::move(library));
+
+    {
+      auto result = library.insert(BOOK_HAMLET);
+      REQUIRE(!result.has_value());
+      CHECK_EQ(result.error(), tb::Library::Error::DB_CONNECTION);
+    }
+
+    {
+      auto result = moved_library.insert(BOOK_HAMLET);
+      REQUIRE(result.has_value());
+    }
+
+    {
+      moved_library = std::move(moved_library);
+      auto result = moved_library.size();
+      REQUIRE(result.has_value());
+      CHECK_EQ(*result, 1);
+    }
+  }
+
   TEST_CASE("LibraryInsert") {
     auto library = *tb::make_library(":memory:");
 

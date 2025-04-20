@@ -11,9 +11,9 @@ namespace tbrekalo {
 
 class Library {
   class Impl;
-  mutable std::shared_ptr<Impl> pimpl_;
+  mutable std::unique_ptr<Impl> pimpl_;
 
-  explicit Library(std::shared_ptr<Impl>);
+  explicit Library(std::unique_ptr<Impl>);
 
  public:
   enum class Error : char { UNEXPECTED, DB_CONNECTION, INVALID_ARGUMENT };
@@ -25,6 +25,14 @@ class Library {
     std::string author;
     bool acquired;
   };
+
+  Library(Library const&) = delete;
+  auto operator=(Library const&) -> Library& = delete;
+
+  Library(Library&&) noexcept;
+  auto operator=(Library&&) noexcept -> Library&;
+
+  ~Library();
 
   auto insert(Book const&) -> std::expected<UUID, Error>;
   auto erase(UUID) -> std::expected<void, Error>;

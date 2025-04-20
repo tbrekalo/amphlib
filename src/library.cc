@@ -10,6 +10,7 @@
 #include <memory>
 #include <mutex>
 #include <source_location>
+#include <utility>
 
 #include "tbrekalo/uuid.h"
 
@@ -185,6 +186,10 @@ class Library::Impl {
   auto execute(ExecuteArgs args) -> std::expected<int, Library::Error> {
     char* errmsg;
     std::lock_guard lk(db_mutex_);
+    if (db_.get() == nullptr) {
+      return std::unexpected(Library::Error::DB_CONNECTION);
+    }
+
     if (sqlite3_exec(db_.get(),
                      /* sql = */ args.sql.data(),
                      /* callback = */ args.callback,
@@ -199,7 +204,16 @@ class Library::Impl {
   }
 };
 
-Library::Library(std::shared_ptr<Impl> impl) : pimpl_(std::move(impl)) {}
+Library::Library(std::unique_ptr<Impl> impl) : pimpl_(std::move(impl)) {}
+
+Library::Library(Library&& that) noexcept { *this = std::move(that); }
+
+auto Library::operator=(Library&& that) noexcept -> Library& {
+  pimpl_ = std::exchange(that.pimpl_, std::make_unique<Impl>(nullptr));
+  return *this;
+}
+
+Library::~Library() {}
 
 auto make_library(std::string_view path)
     -> std::expected<Library, Library::Error> {
@@ -209,9 +223,11 @@ auto make_library(std::string_view path)
     return std::unexpected(Library::Error::UNEXPECTED);
   }
 
-  auto impl = std::make_shared<Library::Impl>(unique_sqlite3(db));
+  auto impl = std::make_unique<Library::Impl>(unique_sqlite3(db));
   return impl->execute(Library::Impl::ExecuteArgs{.sql = sql::INIT_DB_SQL})
-      .transform([impl](int /* n affected rows */) { return Library(impl); });
+      .transform([impl = std::move(impl)](int /* n affected rows */) mutable {
+        return Library(std::move(impl));
+      });
 }
 
 auto Library::insert(Book const& book) -> std::expected<UUID, Error> {
