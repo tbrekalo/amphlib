@@ -88,9 +88,12 @@ static auto parse_count(void* count, int n, char** values, char** variables)
   return 1;
 }
 
-static auto parse_record(void* record_void_ptr, int n, char** values,
+static auto parse_record(void* records_vec_void_ptr, int n, char** values,
                          char** variables) -> int {
-  auto& record = *reinterpret_cast<Library::Record*>(record_void_ptr);
+  auto& records =
+      *reinterpret_cast<std::vector<Library::Record>*>(records_vec_void_ptr);
+  Library::Record record;
+
   for (int i = 0; i < n; ++i) {
     auto const variable_sv = std::string_view(variables[i]);
     auto const value_sv = std::string_view(values[i]);
@@ -123,7 +126,7 @@ static auto parse_record(void* record_void_ptr, int n, char** values,
     }
 
     if (variable_sv == "available") {
-      if (int x; !sscanf(value_sv.data(), "%d", &x)) {
+      if (int x; sscanf(value_sv.data(), "%d", &x)) {
         record.available = x;
         continue;
       }
@@ -133,6 +136,7 @@ static auto parse_record(void* record_void_ptr, int n, char** values,
     return 1;
   }
 
+  records.push_back(std::move(record));
   return 0;
 }
 
