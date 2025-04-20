@@ -2,11 +2,11 @@
 
 ![ci-status](https://github.com/tbrekalo/amphlib/actions/workflows/ci.yml/badge.svg)
 
-Amphlib is a demo project implementing book library managment system utilizing functiol features of modern c++. Usage examples can be found in `src/test.cc`. `misc/google-books.ipynb` is a jupyter notebook for fetching sample data from google books API.
+Amphlib is a demo project implementing a book library management system utilizing functional features of modern C++. Usage examples can be found in `src/test.cc`. `misc/google-books.ipynb` is a Jupyter notebook for fetching sample data from the Google Books API.
 
 ## Dependencies
 
-- linux distro or macOS (recommended)
+- Linux distro or macOS (recommended)
 
 ### C++
 
@@ -14,7 +14,7 @@ Amphlib is a demo project implementing book library managment system utilizing f
 - cmake >= 3.25
 - doctest >= 2.4.11
 - git >= 2.39
-- gnu make >= 4.4.1 (optional)
+- GNU make >= 4.4.1 (optional)
 - libuuid >= 2.41
 - sqlite3 >= 3.49
 
@@ -30,7 +30,13 @@ uv sync
 source .venv/bin/activate
 
 make build-debug
-./build-debug/bin/
+./build-debug/bin/test
+```
+
+### Run tests using [act](https://github.com/nektos/act)
+
+```bash
+act
 ```
 
 ## Interface example
